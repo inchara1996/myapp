@@ -18,7 +18,7 @@ spec:
       containers:
       - name: myapp
         # This image path points to your JFrog registry
-        image: YOUR_SERVER_IP:8082/docker-local/myapp:BUILD_NUMBER
+        image: IMAGE_PLACEHOLDER
         ports:
         - containerPort: 5000
         # Health check — Kubernetes checks this to know if app is alive
