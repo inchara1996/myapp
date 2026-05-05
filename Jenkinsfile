@@ -337,14 +337,12 @@ print('All tests passed!')
     // ─────────────────────────────────────────────────────────────────────
     post {
 
-        // ── Runs only when ALL stages passed ─────────────────────────────
-        success {
-            echo '=== Pipeline SUCCEEDED ==='
-
-            mail(
-                to:      "${EMAIL_RECIPIENT}",
-                subject: "BUILD SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}",
-                body:    """
+    success {
+        echo '=== Pipeline SUCCEEDED ==='
+        mail(
+            to:      'incharanbhushan1996@gmail.com',
+            subject: "BUILD SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}",
+            body:    """
 Hi Team,
 
 The Jenkins pipeline completed successfully.
@@ -353,24 +351,19 @@ Job Name     : ${JOB_NAME}
 Build Number : #${BUILD_NUMBER}
 Status       : SUCCESS
 Duration     : ${currentBuild.durationString}
-Artifact     : ${JFROG_URL}/artifactory/${JFROG_REPO}/myapp-${BUILD_NUMBER}.tar
 Build URL    : ${BUILD_URL}
 
-The deployment was verified healthy and then destroyed as expected.
-
 -- Jenkins Automation
-                """
-            )
-        }
+            """
+        )
+    }
 
-        // ── Runs only when any stage failed ──────────────────────────────
-        failure {
-            echo '=== Pipeline FAILED ==='
-
-            mail(
-                to:      "${EMAIL_RECIPIENT}",
-                subject: "BUILD FAILED: ${JOB_NAME} #${BUILD_NUMBER}",
-                body:    """
+    failure {
+        echo '=== Pipeline FAILED ==='
+        mail(
+            to:      'incharanbhushan1996@gmail.com',
+            subject: "BUILD FAILED: ${JOB_NAME} #${BUILD_NUMBER}",
+            body:    """
 Hi Team,
 
 The Jenkins pipeline has FAILED. Please check immediately.
@@ -381,50 +374,38 @@ Status       : FAILED
 Build URL    : ${BUILD_URL}
 Console Log  : ${BUILD_URL}console
 
-Please open the Console Log link above to see the exact error.
-
 -- Jenkins Automation
-                """
-            )
-        }
+            """
+        )
+    }
 
-        // ── Runs when a broken build is now fixed ─────────────────────────
-        fixed {
-            echo '=== Pipeline recovered from failure ==='
-
-            mail(
-                to:      "${EMAIL_RECIPIENT}",
-                subject: "BUILD FIXED: ${JOB_NAME} #${BUILD_NUMBER}",
-                body:    """
+    fixed {
+        echo '=== Pipeline recovered from failure ==='
+        mail(
+            to:      'incharanbhushan1996@gmail.com',
+            subject: "BUILD FIXED: ${JOB_NAME} #${BUILD_NUMBER}",
+            body:    """
 Hi Team,
 
-Good news — the pipeline is back to normal after a previous failure.
+Pipeline is back to normal after a previous failure.
 
 Job Name     : ${JOB_NAME}
 Build Number : #${BUILD_NUMBER}
-Status       : FIXED / BACK TO NORMAL
+Status       : FIXED
 Build URL    : ${BUILD_URL}
 
 -- Jenkins Automation
-                """
-            )
-        }
-
-        // ── Always runs — cleans up workspace regardless of result ────────
-        always {
-            echo '=== Post Build: Cleaning up ==='
-
-            // Remove the kubeconfig file for security
-            // It contains cluster credentials and must not stay on disk
-            sh 'rm -f kubeconfig || true'
-
-            // Remove the locally built Docker image to free disk space
-            // The artifact is already saved in JFrog so this is safe
-            sh """
-                docker rmi ${IMAGE_NAME}:${BUILD_NUMBER} || true
             """
+        )
+    }
 
-            echo 'Cleanup complete'
+    always {
+        echo '=== Post Build: Cleaning up ==='
+        // ✅ FIX: wrap sh commands in node{} block
+        node('built-in') {
+            sh 'rm -f kubeconfig || true'
+            sh 'docker rmi myapp:${BUILD_NUMBER} || true'
         }
+        echo 'Cleanup complete'
     }
 }
